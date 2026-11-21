@@ -25,7 +25,7 @@ The PlatformIO target is `m5stack-cardputer` and uses the M5Cardputer Arduino li
 
 ## Game library
 
-The first implementation includes **10 playable game engines with 10 difficulty/challenge levels each (100 selectable challenges)**:
+The menu contains 20 individual games:
 
 1. Snake
 2. Pong
@@ -35,10 +35,20 @@ The first implementation includes **10 playable game engines with 10 difficulty/
 6. Math Rush
 7. Memory Sequence
 8. Number Hunt
-9. Tic-Tac-Toe against a CPU opponent
+9. Tic-Tac-Toe
 10. Target Tap
+11. Space Invaders
+12. Tetris
+13. Minesweeper
+14. Flappy Bird
+15. 2048
+16. Chess
+17. Checkers
+18. Pac-Man Maze
+19. Racing
+20. Whack-a-Mole
 
-The 100 entries are challenge variants, not 100 unrelated game engines. Each mode adjusts difficulty and/or round goals. High scores are stored in ESP32 Preferences and survive restarts.
+High scores are stored in ESP32 Preferences and survive restarts.
 
 ## Hardware / release status
 
