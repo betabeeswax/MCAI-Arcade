@@ -365,7 +365,7 @@ void keyAction(String k) {
     int x=pacX,y=pacY;if(k=="a"||k=="A"||k=="LEFT")x--;if(k=="d"||k=="D"||k=="RIGHT")x++;if(k=="w"||k=="W"||k=="UP")y--;if(k=="s"||k=="S"||k=="DOWN")y++;bool wall=x<=0||x>=14||y<=0||y>=6||((x%4==0)&&(y==2||y==4));if(!wall){pacX=x;pacY=y;if(pacDot[y][x]){pacDot[y][x]=false;pacScore++;score+=5;}if(pacScore>=30)finish(true);}
   } else if(mode==RACING) {if(k=="a"||k=="A"||k=="LEFT")carLane=max(0,carLane-1);if(k=="d"||k=="D"||k=="RIGHT")carLane=min(2,carLane+1);}
   else if(mode==WHACK) {if(k=="a"||k=="A"||k=="LEFT")moleCol=max(0,moleCol-1);if(k=="d"||k=="D"||k=="RIGHT")moleCol=min(7,moleCol+1);if(k=="w"||k=="W"||k=="UP")moleRow=max(0,moleRow-1);if(k=="s"||k=="S"||k=="DOWN")moleRow=min(3,moleRow+1);if(k=="ENTER"){if(moleCol==moleAimX&&moleRow==moleAimY){moleCount++;score+=10;if(moleCount>=10)finish(true);}else{score=max(0,score-2);}moleCol=random(0,8);moleRow=random(0,4);moleAimX=moleCol;moleAimY=moleRow;}}
-  } else if(mode==TARGET&&k=="ENTER") {
+  else if(mode==TARGET&&k=="ENTER") {
     int dx=random(-75,76),dy=random(-35,36);targetX=constrain(targetX+dx,20,220);targetY=constrain(targetY+dy,32,108);
     taps++;score+=10;if(taps>=10+level)finish(true);
   }
@@ -384,13 +384,7 @@ void loop() {
   if(M5Cardputer.Keyboard.isChange()&&M5Cardputer.Keyboard.isPressed()) {
     auto &keys=M5Cardputer.Keyboard.keysState();
     for(char key:keys.word) keyAction(String(key));
-    if(keys.up) keyAction("UP");
-    if(keys.down) keyAction("DOWN");
-    if(keys.left) keyAction("LEFT");
-    if(keys.right) keyAction("RIGHT");
     if(keys.enter) keyAction("ENTER");
-    if(keys.backspace) keyAction("BACKSPACE");
-    if(keys.esc) keyAction("ESC");
     if(keys.space) keyAction(" ");
   }
   if(screen==GAME) {
