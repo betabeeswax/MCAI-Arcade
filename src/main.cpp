@@ -1,6 +1,7 @@
 #include <M5Cardputer.h>
 #include <Arduino.h>
 #include <vector>
+#include <Preferences.h>
 
 static constexpr int SW = 240, SH = 135;
 static constexpr uint16_t BG = 0x0841, FG = 0xFFFF, ACC = 0x07FF, GOOD = 0x07E0, BAD = 0xF800, MUTED = 0x8410;
@@ -12,6 +13,7 @@ struct Challenge { const char* name; Mode mode; int level; };
 Challenge challenges[100];
 Screen screen = MENU;
 int selected = 0, score = 0, best[10] = {};
+Preferences prefs;
 int level = 1, page = 0;
 uint32_t lastTick = 0, startedAt = 0, reactionAt = 0;
 bool paused = false, won = false;
@@ -100,7 +102,7 @@ void resetGame(int n) {
 }
 void finish(bool win) {
   won=win; screen=RESULT;
-  if(score>best[(int)mode])best[(int)mode]=score;
+  if(score>best[(int)mode]){best[(int)mode]=score;prefs.putInt(String("b"+String((int)mode)).c_str(),score);}
 }
 void drawSnake() {
   header("SNAKE");
@@ -293,6 +295,8 @@ void setup() {
   auto cfg=M5.config(); M5Cardputer.begin(cfg,true);
   M5Cardputer.Display.setRotation(1);
   M5Cardputer.Display.setBrightness(100);
+  prefs.begin("mcai-arcade",false);
+  for(int i=0;i<10;i++)best[i]=prefs.getInt(String("b"+String(i)).c_str(),0);
   makeChallenges();menuDraw();
 }
 void loop() {
