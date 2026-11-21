@@ -260,7 +260,6 @@ void tickGame() {
   } else if(mode==FLAPPY) {birdSpeed+=0.22;bird+=birdSpeed;if(bird>120||bird<27)finish(false);for(int i=0;i<2;i++){int px=150+i*100-(score*2%100),gap=52+i*23;if(65+5>px&&65-5<px+14&&(bird-5<gap-15||bird+5>gap+25))finish(false);}static uint32_t flapScore=0;if(now-flapScore>700){flapScore=now;score++;}}
   else if(mode==RACING) {score++;for(int i=0;i<3;i++){if(carObs[i]<0)carObs[i]=random(0,3);else if(++carObs[i]>2)carObs[i]=-1;if(i==2&&carObs[i]==carLane)finish(false);}if(score>300)finish(true);}
   else if(mode==WHACK) {if(now-startedAt>30000)finish(false);else if(now-startedAt>750){moleCol=random(0,8);moleRow=random(0,4);moleAimX=moleCol;moleAimY=moleRow;startedAt=now;}}
-  }
 }
 void drawResult() {
   header("ROUND OVER");
@@ -383,8 +382,16 @@ void setup() {
 void loop() {
   M5Cardputer.update();
   if(M5Cardputer.Keyboard.isChange()&&M5Cardputer.Keyboard.isPressed()) {
-    auto keys=M5Cardputer.Keyboard.keys();
-    for(auto key:keys) keyAction(String(key.word.c_str()));
+    auto &keys=M5Cardputer.Keyboard.keysState();
+    for(char key:keys.word) keyAction(String(key));
+    if(keys.up) keyAction("UP");
+    if(keys.down) keyAction("DOWN");
+    if(keys.left) keyAction("LEFT");
+    if(keys.right) keyAction("RIGHT");
+    if(keys.enter) keyAction("ENTER");
+    if(keys.backspace) keyAction("BACKSPACE");
+    if(keys.esc) keyAction("ESC");
+    if(keys.space) keyAction(" ");
   }
   if(screen==GAME) {
     if(mode==MEMORY&&showingSequence&&millis()-startedAt>1800+memoryLen*500){showingSequence=false;drawGame();}
