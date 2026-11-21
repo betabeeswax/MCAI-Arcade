@@ -5,14 +5,14 @@
 
 static constexpr int SW = 240, SH = 135;
 static constexpr uint16_t BG = 0x0841, FG = 0xFFFF, ACC = 0x07FF, GOOD = 0x07E0, BAD = 0xF800, MUTED = 0x8410;
-enum Mode { SNAKE, PONG, BREAKOUT, DODGE, REACTION, MATH, MEMORY, GUESS, TICTACTOE, TARGET };
+enum Mode { SNAKE, PONG, BREAKOUT, DODGE, REACTION, MATH, MEMORY, GUESS, TICTACTOE, TARGET, INVADERS, TETRIS, MINESWEEPER, FLAPPY, GAME2048, CHESS, CHECKERS, PACMAZE, RACING, WHACK };
 enum Screen { MENU, GAME, RESULT };
 struct Point { int x, y; };
 struct Challenge { const char* name; Mode mode; int level; };
 
-Challenge challenges[100];
+Challenge challenges[20];
 Screen screen = MENU;
-int selected = 0, score = 0, best[10] = {};
+int selected = 0, score = 0, best[20] = {};
 Preferences prefs;
 int level = 1, page = 0;
 uint32_t lastTick = 0, startedAt = 0, reactionAt = 0;
@@ -42,16 +42,11 @@ int gridX=0,gridY=0;
 int taps=0;
 
 const char* modeName(Mode m) {
-  switch(m) {
-    case SNAKE:return "SNAKE"; case PONG:return "PONG"; case BREAKOUT:return "BREAKOUT";
-    case DODGE:return "DODGE"; case REACTION:return "REACTION"; case MATH:return "MATH RUSH";
-    case MEMORY:return "MEMORY"; case GUESS:return "NUMBER HUNT"; case TICTACTOE:return "TIC TAC TOE";
-    default:return "TARGET TAP";
-  }
+  static const char* names[]={"SNAKE","PONG","BREAKOUT","DODGE","REACTION","MATH RUSH","MEMORY","NUMBER HUNT","TIC TAC TOE","TARGET TAP","SPACE INVADERS","TETRIS","MINESWEEPER","FLAPPY BIRD","2048","CHESS","CHECKERS","PAC-MAN MAZE","RACING","WHACK-A-MOLE"};
+  return names[(int)m];
 }
 void makeChallenges() {
-  const char* names[10]={"Snake","Pong","Breakout","Dodge","Reaction","Math Rush","Memory","Number Hunt","Tic Tac Toe","Target Tap"};
-  for(int i=0;i<100;i++) challenges[i] = {names[i/10],(Mode)(i/10),(i%10)+1};
+  for(int i=0;i<20;i++) challenges[i] = {modeName((Mode)i),(Mode)i,1};
 }
 void header(const char* title) {
   M5Cardputer.Display.fillScreen(BG);
@@ -67,12 +62,12 @@ void footer(const char* s) {
   M5Cardputer.Display.drawString(s,7,SH-13);
 }
 void menuDraw() {
-  header("100 CHALLENGES");
+  header("20 GAMES");
   M5Cardputer.Display.setTextColor(ACC,BG);
   M5Cardputer.Display.drawString("CHOOSE A GAME",8,23);
   int start=(selected/7)*7;
   for(int i=0;i<7;i++) {
-    int n=start+i; if(n>=100) break;
+    int n=start+i; if(n>=20) break;
     int y=39+i*12;
     if(n==selected) {
       M5Cardputer.Display.fillRoundRect(5,y-1,SW-10,11,2,0x2104);
@@ -214,10 +209,10 @@ void drawResult() {
 }
 void keyAction(String k) {
   if(screen==MENU) {
-    if(k=="w"||k=="W"||k=="UP")selected=(selected+99)%100;
+    if(k=="w"||k=="W"||k=="UP")selected=(selected+19)%20;
     else if(k=="s"||k=="S"||k=="DOWN")selected=(selected+1)%100;
     else if(k=="a"||k=="A")selected=max(0,selected-7);
-    else if(k=="d"||k=="D")selected=min(99,selected+7);
+    else if(k=="d"||k=="D")selected=min(19,selected+7);
     else if(k=="ENTER"||k==" ")resetGame(selected);
     menuDraw();return;
   }
