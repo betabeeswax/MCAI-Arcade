@@ -55,7 +55,7 @@ bool mine[8][8], shown[8][8], flag[8][8]; int mx=0,my=0;
 float bird=65,birdSpeed=0; int tile[4][4];
 char chessBoard[8][8]; int bx=0,by=0,sx=-1,sy=-1; bool whiteMove=true;
 char draughts[8][8]; int cx=0,cy=0,csx=-1,csy=-1; bool redMove=true;
-int pacX=1,pacY=1,pacScore=0,carLane=1,carObs[3]={-1,-1,-1}, moleCol=3,moleRow=2,moleCount=0;
+int pacX=1,pacY=1,pacScore=0,carLane=1,carObs[3]={-1,-1,-1}, moleCol=3,moleRow=2,moleCount=0,moleAimX=3,moleAimY=2;
 
 
 const char* modeName(Mode m) {
@@ -117,7 +117,7 @@ void resetGame(int n) {
   bird=65;birdSpeed=0;memset(tile,0,sizeof(tile));tile[random(0,4)][random(0,4)]=2;tile[random(0,4)][random(0,4)]=2;
   const char* initChess[8]={"rnbqkbnr","pppppppp","........","........","........","........","PPPPPPPP","RNBQKBNR"};for(int y=0;y<8;y++)for(int x=0;x<8;x++)chessBoard[y][x]=initChess[y][x];bx=by=0;sx=sy=-1;whiteMove=true;
   memset(draughts,0,sizeof(draughts));for(int y=0;y<3;y++)for(int x=0;x<8;x++)if((x+y)%2)draughts[y][x]='r';for(int y=5;y<8;y++)for(int x=0;x<8;x++)if((x+y)%2)draughts[y][x]='b';cx=cy=0;csx=csy=-1;redMove=true;
-  pacX=pacY=1;pacScore=0;carLane=1;for(int i=0;i<3;i++)carObs[i]=-1;moleCol=random(0,8);moleRow=random(0,4);moleCount=0;
+  pacX=pacY=1;pacScore=0;carLane=1;for(int i=0;i<3;i++)carObs[i]=-1;moleCol=random(0,8);moleRow=random(0,4);moleAimX=moleCol;moleAimY=moleRow;moleCount=0;
 
   screen=GAME;
 }
@@ -213,7 +213,7 @@ void drawGame() {
     case RACING:
       header("RACING");M5Cardputer.Display.drawString("DISTANCE "+String(score),8,20);M5Cardputer.Display.drawFastVLine(80,28,92,MUTED);M5Cardputer.Display.drawFastVLine(160,28,92,MUTED);for(int i=0;i<3;i++)if(carObs[i]>=0)M5Cardputer.Display.fillRect(50+carObs[i]*45,35+i*27,20,14,BAD);M5Cardputer.Display.fillRoundRect(50+carLane*45,100,20,25,4,GOOD);footer("A/D change lanes");break;
     case WHACK:
-      header("WHACK-A-MOLE");M5Cardputer.Display.drawString("HITS "+String(moleCount)+"/10",8,20);for(int y=0;y<4;y++)for(int x=0;x<8;x++)M5Cardputer.Display.drawCircle(25+x*27,34+y*20,6,MUTED);M5Cardputer.Display.fillCircle(25+moleCol*27,34+moleRow*20,5,GOOD);footer("WASD aim ENTER whack");break;
+      header("WHACK-A-MOLE");M5Cardputer.Display.drawString("HITS "+String(moleCount)+"/10",8,20);for(int y=0;y<4;y++)for(int x=0;x<8;x++)M5Cardputer.Display.drawCircle(25+x*27,34+y*20,6,MUTED);M5Cardputer.Display.fillCircle(25+moleAimX*27,34+moleAimY*20,5,GOOD);M5Cardputer.Display.drawRect(17+moleCol*27,26+moleRow*20,16,16,ACC);footer("WASD aim ENTER whack");break;
     case TARGET:
       header("TARGET TAP");M5Cardputer.Display.drawString("HITS "+String(taps)+"/"+String(10+level),8,22);
       M5Cardputer.Display.fillCircle(targetX,targetY,7,ACC);M5Cardputer.Display.drawCircle(targetX,targetY,10,FG);
@@ -257,9 +257,9 @@ void tickGame() {
   } else if(mode==TETRIS) {
     auto hit=[&](int xx,int yy,int rr){for(int y=0;y<4;y++)for(int x=0;x<4;x++)if(tetShape[tetKind][rr][y][x]){int a=xx+x,b=yy+y;if(a<0||a>=10||b>=16||(b>=0&&tetBoard[b][a]))return true;}return false;};
     static uint32_t fall=0;if(now-fall>550-level*20){fall=now;if(!hit(tetX,tetY+1,tetRot))tetY++;else{for(int y=0;y<4;y++)for(int x=0;x<4;x++)if(tetShape[tetKind][tetRot][y][x]&&tetY+y>=0)tetBoard[tetY+y][tetX+x]=1;for(int y=15;y>=0;y--){bool full=true;for(int x=0;x<10;x++)full&=tetBoard[y][x];if(full){for(int yy=y;yy>0;yy--)for(int x=0;x<10;x++)tetBoard[yy][x]=tetBoard[yy-1][x];for(int x=0;x<10;x++)tetBoard[0][x]=0;score+=100;y++;}}tetX=3;tetY=0;tetKind=random(0,7);tetRot=0;if(hit(tetX,tetY,tetRot))finish(false);}}
-  } else if(mode==FLAPPY) {birdSpeed+=0.22;bird+=birdSpeed;if(bird>120||bird<27)finish(false);static uint32_t flapScore=0;if(now-flapScore>700){flapScore=now;score++;}}
+  } else if(mode==FLAPPY) {birdSpeed+=0.22;bird+=birdSpeed;if(bird>120||bird<27)finish(false);for(int i=0;i<2;i++){int px=150+i*100-(score*2%100),gap=52+i*23;if(65+5>px&&65-5<px+14&&(bird-5<gap-15||bird+5>gap+25))finish(false);}static uint32_t flapScore=0;if(now-flapScore>700){flapScore=now;score++;}}
   else if(mode==RACING) {score++;for(int i=0;i<3;i++){if(carObs[i]<0)carObs[i]=random(0,3);else if(++carObs[i]>2)carObs[i]=-1;if(i==2&&carObs[i]==carLane)finish(false);}if(score>300)finish(true);}
-  else if(mode==WHACK) {if(now-startedAt>30000)finish(false);else if(now-startedAt>750){moleCol=random(0,8);moleRow=random(0,4);startedAt=now;}}
+  else if(mode==WHACK) {if(now-startedAt>30000)finish(false);else if(now-startedAt>750){moleCol=random(0,8);moleRow=random(0,4);moleAimX=moleCol;moleAimY=moleRow;startedAt=now;}}
   }
 }
 void drawResult() {
@@ -274,7 +274,7 @@ void drawResult() {
 void keyAction(String k) {
   if(screen==MENU) {
     if(k=="w"||k=="W"||k=="UP")selected=(selected+19)%20;
-    else if(k=="s"||k=="S"||k=="DOWN")selected=(selected+1)%100;
+    else if(k=="s"||k=="S"||k=="DOWN")selected=(selected+1)%20;
     else if(k=="a"||k=="A")selected=max(0,selected-7);
     else if(k=="d"||k=="D")selected=min(19,selected+7);
     else if(k=="ENTER"||k==" ")resetGame(selected);
@@ -365,7 +365,7 @@ void keyAction(String k) {
   } else if(mode==PACMAZE) {
     int x=pacX,y=pacY;if(k=="a"||k=="A"||k=="LEFT")x--;if(k=="d"||k=="D"||k=="RIGHT")x++;if(k=="w"||k=="W"||k=="UP")y--;if(k=="s"||k=="S"||k=="DOWN")y++;bool wall=x<=0||x>=14||y<=0||y>=6||((x%4==0)&&(y==2||y==4));if(!wall){pacX=x;pacY=y;pacScore++;score++;if(pacScore>=30)finish(true);}
   } else if(mode==RACING) {if(k=="a"||k=="A"||k=="LEFT")carLane=max(0,carLane-1);if(k=="d"||k=="D"||k=="RIGHT")carLane=min(2,carLane+1);}
-  else if(mode==WHACK) {if(k=="a"||k=="A"||k=="LEFT")moleCol=max(0,moleCol-1);if(k=="d"||k=="D"||k=="RIGHT")moleCol=min(7,moleCol+1);if(k=="w"||k=="W"||k=="UP")moleRow=max(0,moleRow-1);if(k=="s"||k=="S"||k=="DOWN")moleRow=min(3,moleRow+1);if(k=="ENTER"){moleCount++;score+=10;if(moleCount>=10)finish(true);moleCol=random(0,8);moleRow=random(0,4);}}
+  else if(mode==WHACK) {if(k=="a"||k=="A"||k=="LEFT")moleCol=max(0,moleCol-1);if(k=="d"||k=="D"||k=="RIGHT")moleCol=min(7,moleCol+1);if(k=="w"||k=="W"||k=="UP")moleRow=max(0,moleRow-1);if(k=="s"||k=="S"||k=="DOWN")moleRow=min(3,moleRow+1);if(k=="ENTER"){if(moleCol==moleAimX&&moleRow==moleAimY){moleCount++;score+=10;if(moleCount>=10)finish(true);}else{score=max(0,score-2);}moleCol=random(0,8);moleRow=random(0,4);moleAimX=moleCol;moleAimY=moleRow;}}
   } else if(mode==TARGET&&k=="ENTER") {
     int dx=random(-75,76),dy=random(-35,36);targetX=constrain(targetX+dx,20,220);targetY=constrain(targetY+dy,32,108);
     taps++;score+=10;if(taps>=10+level)finish(true);
@@ -377,7 +377,7 @@ void setup() {
   M5Cardputer.Display.setRotation(1);
   M5Cardputer.Display.setBrightness(100);
   prefs.begin("mcai-arcade",false);
-  for(int i=0;i<10;i++)best[i]=prefs.getInt(String("b"+String(i)).c_str(),0);
+  for(int i=0;i<20;i++)best[i]=prefs.getInt(String("b"+String(i)).c_str(),0);
   makeChallenges();menuDraw();
 }
 void loop() {
@@ -390,7 +390,7 @@ void loop() {
     if(mode==MEMORY&&showingSequence&&millis()-startedAt>1800+memoryLen*500){showingSequence=false;drawGame();}
     tickGame();
     static uint32_t paint=0;
-    if(millis()-paint>80){paint=millis();if(mode==DODGE||mode==PONG||mode==BREAKOUT)drawGame();}
+    if(millis()-paint>80){paint=millis();if(mode==DODGE||mode==PONG||mode==BREAKOUT||mode==INVADERS||mode==TETRIS||mode==FLAPPY||mode==RACING||mode==WHACK)drawGame();}
   } else if(screen==RESULT) { static uint32_t r=0;if(millis()-r>500){r=millis();drawResult();}}
   delay(8);
 }
