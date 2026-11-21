@@ -142,25 +142,25 @@ void drawGame() {
     case DODGE:drawDodge();break;
     case REACTION:
       header("REACTION TEST"); M5Cardputer.Display.setTextColor(FG,BG);
-      M5Cardputer.Display.drawCentreString(reactionAt==0?"PRESS ENTER!":"WAIT FOR GREEN",120,55,2);
+      M5Cardputer.Display.drawCenterString(reactionAt==0?"PRESS ENTER!":"WAIT FOR GREEN",120,55,2);
       if(reactionAt==0)M5Cardputer.Display.fillCircle(120,94,12,GOOD); else M5Cardputer.Display.fillCircle(120,94,12,BAD);
       footer("ENTER when green; early = fail");break;
     case MATH:
-      header("MATH RUSH"); M5Cardputer.Display.drawCentreString(String(mathA)+" + "+String(mathB)+" = ?",120,45,2);
-      M5Cardputer.Display.drawCentreString("Answer: "+String(guessValue),120,77,2);
+      header("MATH RUSH"); M5Cardputer.Display.drawCenterString(String(mathA)+" + "+String(mathB)+" = ?",120,45,2);
+      M5Cardputer.Display.drawCenterString("Answer: "+String(guessValue),120,77,2);
       footer("1-9 type answer   ENTER submit");break;
     case MEMORY:
-      header("MEMORY"); M5Cardputer.Display.drawCentreString(showingSequence?"MEMORIZE":"REPEAT THE SEQUENCE",120,34,1);
-      if(showingSequence) {String s="";for(int i=0;i<memoryLen;i++)s+=String(memorySeq[i])+" ";M5Cardputer.Display.drawCentreString(s,120,67,2);}
-      else M5Cardputer.Display.drawCentreString("STEP "+String(memoryPos+1)+" / "+String(memoryLen),120,67,2);
+      header("MEMORY"); M5Cardputer.Display.drawCenterString(showingSequence?"MEMORIZE":"REPEAT THE SEQUENCE",120,34,1);
+      if(showingSequence) {String s="";for(int i=0;i<memoryLen;i++)s+=String(memorySeq[i])+" ";M5Cardputer.Display.drawCenterString(s,120,67,2);}
+      else M5Cardputer.Display.drawCenterString("STEP "+String(memoryPos+1)+" / "+String(memoryLen),120,67,2);
       footer("Type the numbers then ENTER");break;
     case GUESS:
-      header("NUMBER HUNT");M5Cardputer.Display.drawCentreString("GUESS 1 - "+String(50+level*5),120,36,1);
-      M5Cardputer.Display.drawCentreString(String(guessValue),120,58,3);
-      M5Cardputer.Display.drawCentreString(message,120,94,1);footer("A/D adjust  ENTER guess");break;
+      header("NUMBER HUNT");M5Cardputer.Display.drawCenterString("GUESS 1 - "+String(50+level*5),120,36,1);
+      M5Cardputer.Display.drawCenterString(String(guessValue),120,58,3);
+      M5Cardputer.Display.drawCenterString(message,120,94,1);footer("A/D adjust  ENTER guess");break;
     case TICTACTOE:
       header("TIC TAC TOE");M5Cardputer.Display.drawString("YOU: X   CPU: O",8,22);
-      for(int y=0;y<3;y++)for(int x=0;x<3;x++){int i=y*3+x;M5Cardputer.Display.drawRect(69+x*34,35+y*27,30,23,MUTED);if(board[i]!=' ')M5Cardputer.Display.drawCentreString(String(board[i]),84+x*34,39+y*27,1);}
+      for(int y=0;y<3;y++)for(int x=0;x<3;x++){int i=y*3+x;M5Cardputer.Display.drawRect(69+x*34,35+y*27,30,23,MUTED);if(board[i]!=' ')M5Cardputer.Display.drawCenterString(String(board[i]),84+x*34,39+y*27,1);}
       M5Cardputer.Display.drawRect(68+(gridX%3)*34,34+(gridY%3)*27,32,25,ACC);
       footer("WASD select  ENTER place");break;
     case TARGET:
@@ -203,10 +203,10 @@ void tickGame() {
 void drawResult() {
   header("ROUND OVER");
   M5Cardputer.Display.setTextColor(won?GOOD:ACC,BG);
-  M5Cardputer.Display.drawCentreString(won?"YOU WIN!":"GAME OVER",120,38,2);
+  M5Cardputer.Display.drawCenterString(won?"YOU WIN!":"GAME OVER",120,38,2);
   M5Cardputer.Display.setTextColor(FG,BG);
-  M5Cardputer.Display.drawCentreString("SCORE  "+String(score),120,69,2);
-  M5Cardputer.Display.drawCentreString("BEST   "+String(best[(int)mode]),120,91,1);
+  M5Cardputer.Display.drawCenterString("SCORE  "+String(score),120,69,2);
+  M5Cardputer.Display.drawCenterString("BEST   "+String(best[(int)mode]),120,91,1);
   footer("ENTER: replay   BACKSPACE: game list");
 }
 void keyAction(String k) {
