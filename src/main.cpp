@@ -23,7 +23,8 @@ std::vector<Point> snake;
 Point food{8,5};
 int dirX = 1, dirY = 0;
 float ballX=120, ballY=65, ballVX=2.2, ballVY=1.5;
-float paddleX=105;
+float paddleX=50;
+float brickPaddleX=103;
 bool bricks[5][10];
 int lives=3;
 Point player{7,7}, target{10,5};
@@ -86,7 +87,7 @@ void resetGame(int n) {
   randomSeed(esp_random());
   snake.clear(); snake.push_back({7,5}); snake.push_back({6,5}); snake.push_back({5,5});
   dirX=1;dirY=0;food={random(2,17),random(2,9)};
-  ballX=120;ballY=65;ballVX=(random(0,2)?1:-1)*(1.7+level*.12);ballVY=1.4+level*.08;paddleX=105;
+  ballX=120;ballY=65;ballVX=(random(0,2)?1:-1)*(1.7+level*.12);ballVY=1.4+level*.08;paddleX=50;brickPaddleX=103;
   for(int y=0;y<5;y++)for(int x=0;x<10;x++)bricks[y][x]=(y<2+level/3);
   player={7,7};target={random(1,18),random(1,10)};
   reactionMs=0;reactionAt=millis()+random(1200,3500);mathA=random(1,10+level*2);mathB=random(1,10+level*2);mathAnswer=mathA+mathB;
@@ -122,7 +123,7 @@ void drawBreakout() {
   header("BREAKOUT");
   M5Cardputer.Display.drawString("SCORE "+String(score)+"   LIVES "+String(lives),8,22);
   for(int y=0;y<5;y++)for(int x=0;x<10;x++)if(bricks[y][x])M5Cardputer.Display.fillRect(5+x*23,30+y*9,20,6,(y%2)?ACC:GOOD);
-  M5Cardputer.Display.fillRect((int)paddleX,116,34,5,FG);
+  M5Cardputer.Display.fillRect((int)brickPaddleX,116,34,5,FG);
   M5Cardputer.Display.fillCircle((int)ballX,(int)ballY,3,BAD);
   footer("A/D or arrows: move");
 }
@@ -186,7 +187,7 @@ void tickGame() {
     if(ballX>242){lives--;ballX=120;ballY=65;if(lives<=0)finish(false);}
   } else if(mode==BREAKOUT) {
     ballX+=ballVX;ballY+=ballVY;if(ballX<5||ballX>235)ballVX=-ballVX;if(ballY<25)ballVY=abs(ballVY);
-    if(ballY>111&&ballX>paddleX-3&&ballX<paddleX+37){ballVY=-abs(ballVY);score+=2;}
+    if(ballY>111&&ballX>brickPaddleX-3&&ballX<brickPaddleX+37){ballVY=-abs(ballVY);score+=2;}
     if(ballY>130){lives--;ballX=120;ballY=100;if(lives<=0)finish(false);}
     int bx=(int)ballX/23,by=((int)ballY-30)/9;if(bx>=0&&bx<10&&by>=0&&by<5&&bricks[by][bx]){bricks[by][bx]=false;ballVY=-ballVY;score+=10;}
     bool any=false;for(int y=0;y<5;y++)for(int x=0;x<10;x++)any|=bricks[y][x];if(!any)finish(true);
@@ -231,11 +232,15 @@ void keyAction(String k) {
     if((k=="a"||k=="A"||k=="LEFT")&&dirX==0){dirX=-1;dirY=0;}
     if((k=="d"||k=="D"||k=="RIGHT")&&dirX==0){dirX=1;dirY=0;}
   } else if(mode==PONG||mode==BREAKOUT) {
-    if(k=="w"||k=="W"||k=="UP")paddleX-=9;
-    if(k=="s"||k=="S"||k=="DOWN")paddleX+=9;
-    if(k=="a"||k=="A"||k=="LEFT")paddleX-=10;
-    if(k=="d"||k=="D"||k=="RIGHT")paddleX+=10;
-    paddleX=constrain(paddleX,25,SH-45);
+    if(mode==PONG) {
+      if(k=="w"||k=="W"||k=="UP")paddleX-=9;
+      if(k=="s"||k=="S"||k=="DOWN")paddleX+=9;
+      paddleX=constrain(paddleX,25,SH-45);
+    } else {
+      if(k=="a"||k=="A"||k=="LEFT")brickPaddleX-=10;
+      if(k=="d"||k=="D"||k=="RIGHT")brickPaddleX+=10;
+      brickPaddleX=constrain(brickPaddleX,3,SW-38);
+    }
   } else if(mode==DODGE) {
     if(k=="w"||k=="W"||k=="UP")player.y=max(0,player.y-1);
     if(k=="s"||k=="S"||k=="DOWN")player.y=min(10,player.y+1);
@@ -259,7 +264,25 @@ void keyAction(String k) {
     if(k=="s"||k=="S"||k=="DOWN")gridY=(gridY+1)%3;
     if(k=="a"||k=="A"||k=="LEFT")gridX=(gridX+2)%3;
     if(k=="d"||k=="D"||k=="RIGHT")gridX=(gridX+1)%3;
-    if(k=="ENTER"){int i=gridY*3+gridX;if(board[i]==' '){board[i]='X';turn++;bool empty=false;for(char c:board)empty|=c==' ';if(!empty){finish(false);return;}int cpu=random(0,9);while(board[cpu]!=' ')cpu=(cpu+1)%9;board[cpu]='O';turn++;}}
+    if(k=="ENTER"){
+      int i=gridY*3+gridX;
+      if(board[i]==' '){
+        board[i]='X';
+        auto hasLine=[&](char p) {
+          for(int a=0;a<3;a++) if(board[a*3]==p&&board[a*3+1]==p&&board[a*3+2]==p) return true;
+          for(int a=0;a<3;a++) if(board[a]==p&&board[a+3]==p&&board[a+6]==p) return true;
+          return (board[0]==p&&board[4]==p&&board[8]==p)||(board[2]==p&&board[4]==p&&board[6]==p);
+        };
+        if(hasLine('X')){score=100;finish(true);return;}
+        int cpu=random(0,9),triesCpu=0;
+        while(board[cpu]!=' '&&triesCpu++<9)cpu=(cpu+1)%9;
+        if(triesCpu>=9){finish(false);return;}
+        board[cpu]='O';
+        if(hasLine('O')){finish(false);return;}
+        bool empty=false;for(char c:board)empty|=c==' ';
+        if(!empty)finish(false);
+      }
+    }
   } else if(mode==TARGET&&k=="ENTER") {
     int dx=random(-75,76),dy=random(-35,36);targetX=constrain(targetX+dx,20,220);targetY=constrain(targetY+dy,32,108);
     taps++;score+=10;if(taps>=10+level)finish(true);
