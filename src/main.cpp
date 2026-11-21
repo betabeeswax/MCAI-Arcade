@@ -55,7 +55,7 @@ bool mine[8][8], shown[8][8], flag[8][8]; int mx=0,my=0;
 float bird=65,birdSpeed=0; int tile[4][4];
 char chessBoard[8][8]; int bx=0,by=0,sx=-1,sy=-1; bool whiteMove=true;
 char draughts[8][8]; int cx=0,cy=0,csx=-1,csy=-1; bool redMove=true;
-int pacX=1,pacY=1,pacScore=0,carLane=1,carObs[3]={-1,-1,-1}, moleCol=3,moleRow=2,moleCount=0,moleAimX=3,moleAimY=2;
+int pacX=1,pacY=1,pacScore=0,carLane=1,carObs[3]={-1,-1,-1}, moleCol=3,moleRow=2,moleCount=0,moleAimX=3,moleAimY=2; bool pacDot[7][15];
 
 
 const char* modeName(Mode m) {
@@ -117,7 +117,7 @@ void resetGame(int n) {
   bird=65;birdSpeed=0;memset(tile,0,sizeof(tile));tile[random(0,4)][random(0,4)]=2;tile[random(0,4)][random(0,4)]=2;
   const char* initChess[8]={"rnbqkbnr","pppppppp","........","........","........","........","PPPPPPPP","RNBQKBNR"};for(int y=0;y<8;y++)for(int x=0;x<8;x++)chessBoard[y][x]=initChess[y][x];bx=by=0;sx=sy=-1;whiteMove=true;
   memset(draughts,0,sizeof(draughts));for(int y=0;y<3;y++)for(int x=0;x<8;x++)if((x+y)%2)draughts[y][x]='r';for(int y=5;y<8;y++)for(int x=0;x<8;x++)if((x+y)%2)draughts[y][x]='b';cx=cy=0;csx=csy=-1;redMove=true;
-  pacX=pacY=1;pacScore=0;carLane=1;for(int i=0;i<3;i++)carObs[i]=-1;moleCol=random(0,8);moleRow=random(0,4);moleAimX=moleCol;moleAimY=moleRow;moleCount=0;
+  pacX=pacY=1;pacScore=0;memset(pacDot,1,sizeof(pacDot));for(int py=0;py<7;py++)for(int px=0;px<15;px++)if(!px||px==14||!py||py==6||((px%4==0)&&(py==2||py==4)))pacDot[py][px]=false;pacDot[1][1]=false;carLane=1;for(int i=0;i<3;i++)carObs[i]=-1;moleCol=random(0,8);moleRow=random(0,4);moleAimX=moleCol;moleAimY=moleRow;moleCount=0;
 
   screen=GAME;
 }
@@ -209,7 +209,7 @@ void drawGame() {
     case CHECKERS:
       header("CHECKERS");for(int y=0;y<8;y++)for(int x=0;x<8;x++){int px=48+x*12,py=28+y*12;M5Cardputer.Display.fillRect(px,py,12,12,((x+y)%2)?0x7BEF:0x39E7);if(draughts[y][x])M5Cardputer.Display.fillCircle(px+6,py+6,4,draughts[y][x]=='r'?BAD:FG);if(x==cx&&y==cy)M5Cardputer.Display.drawRect(px,py,12,12,ACC);if(x==csx&&y==csy)M5Cardputer.Display.drawRect(px+2,py+2,8,8,GOOD);}footer("WASD select ENTER move");break;
     case PACMAZE:
-      header("PAC-MAN MAZE");M5Cardputer.Display.drawString("DOTS "+String(pacScore),8,20);for(int y=0;y<7;y++)for(int x=0;x<15;x++){int px=20+x*13,py=30+y*12;bool wall=!x||x==14||!y||y==6||((x%4==0)&&(y==2||y==4));if(wall)M5Cardputer.Display.fillRect(px,py,12,11,ACC);else M5Cardputer.Display.fillCircle(px+6,py+5,1,FG);}M5Cardputer.Display.fillCircle(26+pacX*13,35+pacY*12,5,GOOD);footer("WASD move");break;
+      header("PAC-MAN MAZE");M5Cardputer.Display.drawString("DOTS "+String(pacScore),8,20);for(int y=0;y<7;y++)for(int x=0;x<15;x++){int px=20+x*13,py=30+y*12;bool wall=!x||x==14||!y||y==6||((x%4==0)&&(y==2||y==4));if(wall)M5Cardputer.Display.fillRect(px,py,12,11,ACC);else if(pacDot[y][x])M5Cardputer.Display.fillCircle(px+6,py+5,1,FG);}M5Cardputer.Display.fillCircle(26+pacX*13,35+pacY*12,5,GOOD);footer("WASD move");break;
     case RACING:
       header("RACING");M5Cardputer.Display.drawString("DISTANCE "+String(score),8,20);M5Cardputer.Display.drawFastVLine(80,28,92,MUTED);M5Cardputer.Display.drawFastVLine(160,28,92,MUTED);for(int i=0;i<3;i++)if(carObs[i]>=0)M5Cardputer.Display.fillRect(50+carObs[i]*45,35+i*27,20,14,BAD);M5Cardputer.Display.fillRoundRect(50+carLane*45,100,20,25,4,GOOD);footer("A/D change lanes");break;
     case WHACK:
@@ -361,9 +361,9 @@ void keyAction(String k) {
     if(k=="ENTER"){char p=chessBoard[by][bx];if(sx<0){if(p!='.'&&((whiteMove&&isupper(p))||(!whiteMove&&islower(p)))){sx=bx;sy=by;}}else{char d=chessBoard[by][bx];if((d=='.'||(whiteMove&&islower(d))||(!whiteMove&&isupper(d)))&&(bx!=sx||by!=sy)){char q=tolower(chessBoard[sy][sx]);int dx=bx-sx,dy=by-sy;bool ok=true;if(q=='n')ok=(abs(dx)==1&&abs(dy)==2)||(abs(dx)==2&&abs(dy)==1);else if(q=='k')ok=abs(dx)<=1&&abs(dy)<=1;else if(q=='b')ok=abs(dx)==abs(dy);else if(q=='r')ok=dx==0||dy==0;else if(q=='q')ok=dx==0||dy==0||abs(dx)==abs(dy);else if(q=='p')ok=abs(dx)<=1&&(whiteMove?dy<0:dy>0);if(ok){if(tolower(d)=='k'){score=100;finish(true);return;}chessBoard[by][bx]=p;chessBoard[sy][sx]='.';whiteMove=!whiteMove;}}sx=sy=-1;}}
   } else if(mode==CHECKERS) {
     if(k=="a"||k=="A"||k=="LEFT")cx=max(0,cx-1);if(k=="d"||k=="D"||k=="RIGHT")cx=min(7,cx+1);if(k=="w"||k=="W"||k=="UP")cy=max(0,cy-1);if(k=="s"||k=="S"||k=="DOWN")cy=min(7,cy+1);
-    if(k=="ENTER"){char p=draughts[cy][cx];if(csx<0){if(p==(redMove?'r':'b')){csx=cx;csy=cy;}}else{int dx=cx-csx,dy=cy-csy,fw=redMove?-1:1;if(abs(dx)==1&&dy==fw&&!draughts[cy][cx]){draughts[cy][cx]=draughts[csy][csx];draughts[csy][csx]=0;redMove=!redMove;}else if(abs(dx)==2&&dy==2*fw&&!draughts[cy][cx]&&draughts[csy+fw][csx+dx/2]&&draughts[csy+fw][csx+dx/2]!=(redMove?'r':'b')){draughts[cy][cx]=draughts[csy][csx];draughts[csy][csx]=0;draughts[csy+fw][csx+dx/2]=0;score+=10;redMove=!redMove;}csx=csy=-1;}}
+    if(k=="ENTER"){char p=draughts[cy][cx];if(csx<0){if(p==(redMove?'r':'b')){csx=cx;csy=cy;}}else{int dx=cx-csx,dy=cy-csy,fw=redMove?1:-1;if(abs(dx)==1&&dy==fw&&!draughts[cy][cx]){draughts[cy][cx]=draughts[csy][csx];draughts[csy][csx]=0;redMove=!redMove;}else if(abs(dx)==2&&dy==2*fw&&!draughts[cy][cx]&&draughts[csy+fw][csx+dx/2]&&draughts[csy+fw][csx+dx/2]!=(redMove?'r':'b')){draughts[cy][cx]=draughts[csy][csx];draughts[csy][csx]=0;draughts[csy+fw][csx+dx/2]=0;score+=10;redMove=!redMove;}csx=csy=-1;}}
   } else if(mode==PACMAZE) {
-    int x=pacX,y=pacY;if(k=="a"||k=="A"||k=="LEFT")x--;if(k=="d"||k=="D"||k=="RIGHT")x++;if(k=="w"||k=="W"||k=="UP")y--;if(k=="s"||k=="S"||k=="DOWN")y++;bool wall=x<=0||x>=14||y<=0||y>=6||((x%4==0)&&(y==2||y==4));if(!wall){pacX=x;pacY=y;pacScore++;score++;if(pacScore>=30)finish(true);}
+    int x=pacX,y=pacY;if(k=="a"||k=="A"||k=="LEFT")x--;if(k=="d"||k=="D"||k=="RIGHT")x++;if(k=="w"||k=="W"||k=="UP")y--;if(k=="s"||k=="S"||k=="DOWN")y++;bool wall=x<=0||x>=14||y<=0||y>=6||((x%4==0)&&(y==2||y==4));if(!wall){pacX=x;pacY=y;if(pacDot[y][x]){pacDot[y][x]=false;pacScore++;score+=5;}if(pacScore>=30)finish(true);}
   } else if(mode==RACING) {if(k=="a"||k=="A"||k=="LEFT")carLane=max(0,carLane-1);if(k=="d"||k=="D"||k=="RIGHT")carLane=min(2,carLane+1);}
   else if(mode==WHACK) {if(k=="a"||k=="A"||k=="LEFT")moleCol=max(0,moleCol-1);if(k=="d"||k=="D"||k=="RIGHT")moleCol=min(7,moleCol+1);if(k=="w"||k=="W"||k=="UP")moleRow=max(0,moleRow-1);if(k=="s"||k=="S"||k=="DOWN")moleRow=min(3,moleRow+1);if(k=="ENTER"){if(moleCol==moleAimX&&moleRow==moleAimY){moleCount++;score+=10;if(moleCount>=10)finish(true);}else{score=max(0,score-2);}moleCol=random(0,8);moleRow=random(0,4);moleAimX=moleCol;moleAimY=moleRow;}}
   } else if(mode==TARGET&&k=="ENTER") {
