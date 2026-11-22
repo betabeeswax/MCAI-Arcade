@@ -373,7 +373,7 @@ void keyAction(String k) {
 }
 void setup() {
   auto cfg=M5.config(); M5Cardputer.begin(cfg,true);
-  M5Cardputer.Display.setRotation(1);
+  M5Cardputer.Display.setRotation(0);
   M5Cardputer.Display.setBrightness(100);
   prefs.begin("mcai-arcade",false);
   for(int i=0;i<20;i++)best[i]=prefs.getInt(String("b"+String(i)).c_str(),0);
